@@ -29,6 +29,8 @@ Usage - formats:
 """
 
 import requests
+import textwrap
+import math
 import re
 import argparse
 import csv
@@ -273,39 +275,54 @@ def run(
                             if response.ok:
                                 print("Groundstation response:", response.json())
 
-                                #mission_template_path = "/home/brunofgomes/RSA/drone_sim/scripts-main/fleet-manager/examples/mission1.groovy"
-                                #temp_mission_path = "mission1_temp.groovy"
+                                detected_lat = 40.63242 #fire coordinates
+                                detected_lon = -8.660162
 
-                                detected_lat = 40.63450 #fire coordinates
-                                detected_lon = -8.660800
+                                # --- Dynamic grid generation ---
+                                grid_size = 3  # 3x3 grid
+                                spacing_m = 20  # meters between waypoints
+
+                                delta_lat = spacing_m / 111320
+                                delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
+
+                                waypoints = []
+                                offset = grid_size // 2
+                                for z in range(-offset, offset + 1):
+                                    for m in range(-offset, offset + 1):
+                                        if z == 0 and m == 0: # skip the center waypoint (directly above the fire)
+                                            continue
+                                        wp_lat = detected_lat + z * delta_lat
+                                        wp_lon = detected_lon + m * delta_lon
+                                        waypoints.append((wp_lat, wp_lon))
+
+                                # --- build Groovy mission script dynamically ---
+                                waypoints_groovy = ",\n    ".join(
+                                    [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
+                                )
 
                                 mission_script = textwrap.dedent(f"""\
                                 /*
-                                * single_drone_to_location.groovy
-                                * Sends one drone to a target location and returns home.
+                                * multi_waypoint_scout.groovy
+                                * Sends one drone to multiple waypoints and returns home.
                                 */
 
                                 drone = assign 'drone01'
-                                target = [lat: {detected_lat}, lon: {detected_lon}]
                                 arm drone
                                 takeoff drone, 5.meters
                                 takeoff_alt = drone.position.alt
-                                move drone, lat: target.lat, lon: target.lon, alt: takeoff_alt
+
+                                waypoints = [
+                                    {waypoints_groovy}
+                                ]
+
+                                for (wp in waypoints) {{
+                                    move drone, lat: wp.lat, lon: wp.lon, alt: takeoff_alt
+                                }}
                                 home drone
                                 """)
 
-                                #with open(mission_template_path, "r") as f:
-                                #    groovy_content = f.read()
-
-                                #groovy_content_new, n = re.subn( #allow spaces and matches target line
-                                #    r"target\s*=\s*\[\s*lat:\s*[\d\.\-]+,\s*lon:\s*[\d\.\-]+\s*\]",
-                                #    f"target = [lat: {detected_lat}, lon: {detected_lon}]",
-                                #    groovy_content,
-                                #    count=1
-                                #)
                                 mission_path = "mission1_temp.groovy"
                                 with open(mission_path, "w") as f:
-                                    #f.write(groovy_content_new)
                                     f.write(mission_script)
 
                                 # --- upload the updated mission file ---
