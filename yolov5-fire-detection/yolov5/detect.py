@@ -69,6 +69,9 @@ from utils.general import (
 )
 from utils.torch_utils import select_device, smart_inference_mode
 
+# RSA variables
+existing_zones = []  
+current_patrol_waypoints = [] 
 
 @smart_inference_mode()
 def run(
@@ -101,6 +104,7 @@ def run(
     half=False,  # use FP16 half-precision inference
     dnn=False,  # use OpenCV DNN for ONNX inference
     vid_stride=1,  # video frame-rate stride
+    mission=1 # type of mission to execute (1 for fire detection, 2 enlarge search area, 3 patrol burnt area
 ):
     """
     Runs YOLOv5 detection inference on various sources like images, videos, directories, streams, etc.
@@ -278,64 +282,71 @@ def run(
                                 detected_lat = 40.63242 #fire coordinates
                                 detected_lon = -8.660162
 
-                                # --- Dynamic grid generation ---
-                                grid_size = 3  # 3x3 grid
-                                spacing_m = 20  # meters between waypoints
+                                if opt.mission == 1: 
+                                    # --- Dynamic grid generation ---
+                                    grid_size = 3  # 3x3 grid
+                                    spacing_m = 20  # meters between waypoints
 
-                                delta_lat = spacing_m / 111320
-                                delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
+                                    delta_lat = spacing_m / 111320
+                                    delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
 
-                                waypoints = []
-                                offset = grid_size // 2
-                                for z in range(-offset, offset + 1):
-                                    for m in range(-offset, offset + 1):
-                                        if z == 0 and m == 0: # skip the center waypoint (directly above the fire)
-                                            continue
-                                        wp_lat = detected_lat + z * delta_lat
-                                        wp_lon = detected_lon + m * delta_lon
-                                        waypoints.append((wp_lat, wp_lon))
+                                    waypoints = []
+                                    offset = grid_size // 2
+                                    for z in range(-offset, offset + 1):
+                                        for m in range(-offset, offset + 1):
+                                            if z == 0 and m == 0: # skip the center waypoint (directly above the fire)
+                                                continue
+                                            wp_lat = detected_lat + z * delta_lat
+                                            wp_lon = detected_lon + m * delta_lon
+                                            waypoints.append((wp_lat, wp_lon))
+                                    # --- build Groovy mission script dynamically ---
+                                    waypoints_groovy = ",\n    ".join(
+                                        [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
+                                    )
 
-                                # --- build Groovy mission script dynamically ---
-                                waypoints_groovy = ",\n    ".join(
-                                    [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
-                                )
+                                    mission_script = textwrap.dedent(f"""\
+                                    /*
+                                    * multi_waypoint_scout.groovy
+                                    * Sends one drone to multiple waypoints and returns home.
+                                    */
 
-                                mission_script = textwrap.dedent(f"""\
-                                /*
-                                * multi_waypoint_scout.groovy
-                                * Sends one drone to multiple waypoints and returns home.
-                                */
+                                    drone = assign 'drone01'
+                                    arm drone
+                                    takeoff drone, 5.meters
+                                    takeoff_alt = drone.position.alt
 
-                                drone = assign 'drone01'
-                                arm drone
-                                takeoff drone, 5.meters
-                                takeoff_alt = drone.position.alt
+                                    waypoints = [
+                                        {waypoints_groovy}
+                                    ]
 
-                                waypoints = [
-                                    {waypoints_groovy}
-                                ]
+                                    for (wp in waypoints) {{
+                                        move drone, lat: wp.lat, lon: wp.lon, alt: takeoff_alt
+                                    }}
+                                    home drone
+                                    """)
 
-                                for (wp in waypoints) {{
-                                    move drone, lat: wp.lat, lon: wp.lon, alt: takeoff_alt
-                                }}
-                                home drone
-                                """)
+                                    mission_path = "mission1_temp.groovy"
+                                    with open(mission_path, "w") as f:
+                                        f.write(mission_script)
 
-                                mission_path = "mission1_temp.groovy"
-                                with open(mission_path, "w") as f:
-                                    f.write(mission_script)
+                                    # --- upload the updated mission file ---
+                                    with open(mission_path, "rb") as f:
+                                        file_content = f.read()
+                                        headers={"Accept": "application/json"}
+                                        mission_response = requests.post(f"{gs_url}/mission", data=file_content, headers=headers)
+                                        if mission_response.ok:
+                                            print("Mission launched:", mission_response.text)
+                                        else:
+                                            print(f"Mission launch failed: {mission_response.status_code} {mission_response.text}")
 
-                                # --- upload the updated mission file ---
-                                with open(mission_path, "rb") as f:
-                                    file_content = f.read()
-                                    headers={"Accept": "application/json"}
-                                    mission_response = requests.post(f"{gs_url}/mission", data=file_content, headers=headers)
-                                    if mission_response.ok:
-                                        print("Mission launched:", mission_response.text)
-                                    else:
-                                        print(f"Mission launch failed: {mission_response.status_code} {mission_response.text}")
+                                    fire_alert_sent = True  # set flag so it only sends the request once
 
-                                fire_alert_sent = True  # set flag so it only sends the request once
+                                elif opt.mission == 2:
+                                    # --- Mission 2: Append new patrol zone to existing perimeter ---
+                                    print("Patrol mission 2: Appending new patrol zone to existing perimeter")
+                                elif opt.mission == 3:
+                                    #do nothing for now
+                                    print("Patrol mission 3: No action taken, just patrol burnt area")
                             else:
                                 print(f"Request failed with status code {response.status_code}: {response.text}")
                         except Exception as e:
@@ -483,6 +494,14 @@ def parse_opt():
     parser.add_argument("--half", action="store_true", help="use FP16 half-precision inference")
     parser.add_argument("--dnn", action="store_true", help="use OpenCV DNN for ONNX inference")
     parser.add_argument("--vid-stride", type=int, default=1, help="video frame-rate stride")
+    parser.add_argument(
+        "--mission",
+        type=int,
+        default=1,
+        choices=[1, 2, 3],
+        help="type of mission to execute: 1 for fire detection, 2 enlarge search area, 3 patrol burnt area",
+    )
+
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(vars(opt))
