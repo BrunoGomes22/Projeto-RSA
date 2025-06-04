@@ -1,0 +1,44 @@
+{
+    "services": {
+        "groundstation": {
+            "enabled": true,
+            "dir": "fleet-manager",
+            "mode": "prod"
+        },
+        "backend": {
+            "enabled": false,
+            "dir": "drone-backend",
+            "mode": "prod",
+            "venv": "venv3615"
+        },
+        "frontend": {
+            "enabled": false,
+            "dir": "dashboard",
+            "mode": "prod"
+        },
+        "simulator": {
+            "enabled": true,
+            "dir": "fleet-manager/tools/sim_launcher",
+            "file": "two_drones_aveiro.yml"
+        },
+        "drone": {
+            "enabled": false,
+            "dir": "fleet-manager/deploy",
+            "id": "drone01"
+        }
+    },
+    "repositories": {
+        "fleet-manager": {
+            "url": "https://code.nap.av.it.pt/uavs/fleet-manager",
+            "branch": "master"
+        },
+        "drone-backend": {
+            "url": "https://code.nap.av.it.pt/uavs/drone-backend",
+            "branch": "master"
+        },
+        "dashboard": {
+            "url": "https://code.nap.av.it.pt/uavs/dashboard",
+            "branch": "master"
+        }
+    }
+}

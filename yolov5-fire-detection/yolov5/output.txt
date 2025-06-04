@@ -1,0 +1,10 @@
+Mission coordinates:
+// Define a set of coordinates
+coords = [
+        // Move at a speed of 12m/s, no yaw is provided so the drone will face the waypoint
+        [lat: 208.6605474, speed: 12.m/s],
+        // Default speed and yaw of 45º
+        [lat: 40.63407, lon: -8.6606172, yaw: 45.deg],
+        // Speed and yaw will have the default values
+        [lat: 40.63398, lon: -8.6607840]
+]
