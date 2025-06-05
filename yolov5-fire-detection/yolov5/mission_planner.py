@@ -7,7 +7,7 @@ import os
 class MissionPlanner:
     def __init__(self):
         self.gs_url = "http://localhost:8001"
-        self.fire_coords = None
+        self.fire_coords = []
         self.debug = True
         self.video_source = None
 
@@ -55,7 +55,6 @@ class MissionPlanner:
             
             if "FIRE_DETECTED" in result.stdout.upper():
                 self.log("Fire detected in the video")
-                #self.fire_coords = (40.63242, -8.660162)
                 return True
             return False
                 
@@ -64,6 +63,9 @@ class MissionPlanner:
             return False
     
     def generate_mission_1(self):
+        if not self.detect_fire(self.video_source):
+            print("No fire detected. Exiting mission generation.")
+            return None
         self.fire_coords = (40.63242, -8.660162) 
         detected_lat, detected_lon = self.fire_coords
 
@@ -111,9 +113,115 @@ class MissionPlanner:
         return mission_script
     
     def generate_mission_2(self):
+        if not self.detect_fire(self.video_source):
+            print("No fire detected. Exiting mission generation.")
+            return None
+        fire_lat, fire_lon = (40.63242, -8.660162)
+        
+        side_m = 40
+        half_side = side_m / 2
+        delta_lat = half_side / 111320
+        delta_lon = half_side / (111320 * math.cos(math.radians(fire_lat)))
 
-        return 
+        corners = [
+            (fire_lat + delta_lat, fire_lon - delta_lon),  # NW
+            (fire_lat + delta_lat, fire_lon + delta_lon),  # NE
+            (fire_lat - delta_lat, fire_lon + delta_lon),  # SE
+            (fire_lat - delta_lat, fire_lon - delta_lon),  # SW
+            (fire_lat + delta_lat, fire_lon - delta_lon)  # NW again
+        ]
+
+        drones = ["drone01", "drone03"]
+        drone_waypoints = {drone: [] for drone in drones}
+        for i, corner in enumerate(corners):
+            drone = drones[i % len(drones)]
+            drone_waypoints[drone].append(corner)
+
+        mission_lines = []
+        for drone in drones:
+            mission_lines.append(f"{drone} = assign '{drone}'")
+            mission_lines.append(f"arm {drone}")
+            mission_lines.append(f"takeoff {drone}, 5.meters")
+            mission_lines.append(f"takeoff_alt_{drone} = {drone}.position.alt")
+            mission_lines.append(f"waypoints_{drone} = [")
+            mission_lines.extend(
+                [f"    [lat: {lat:.6f}, lon: {lon:.6f}]," for lat, lon in drone_waypoints[drone]]
+            )
+            mission_lines.append("]")
+            mission_lines.append(f"for (wp in waypoints_{drone}) {{")
+            mission_lines.append(f"    move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt_{drone}")
+            mission_lines.append("}")
+            mission_lines.append(f"home {drone}\n")
+
+        mission_script = textwrap.dedent(f"""\
+        /*
+        * perimeter_patrol.groovy
+        * Two drones patrol a square perimeter around a detected fire.
+        */
+        """) + "\n".join(mission_lines)
+
+
+        return mission_script
     
+    def generate_mission_3(self):
+        if not self.detect_fire(self.video_source):
+            print("No fire detected. Exiting mission generation.")
+            return None
+        detected_lat, detected_lon = (40.63242, -8.660162)
+        grid_size = 3
+        spacing_m = 20
+
+        delta_lat = spacing_m / 111320
+        delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
+
+        waypoints_grid = []
+        offset = grid_size // 2
+        for z in range(-offset, offset + 1):
+            row = []
+            for m in range(-offset, offset + 1):
+                if z == 0 and m == 0:  # skip the center
+                    continue
+                wp_lat = detected_lat + z * delta_lat
+                wp_lon = detected_lon + m * delta_lon
+                row.append((wp_lat, wp_lon))
+            waypoints_grid.append(row)
+        
+        # Assign each row to a drone (no overlap)
+        drone_waypoints = {
+            "drone01": waypoints_grid[0],
+            "drone02": waypoints_grid[1],
+            "drone03": waypoints_grid[2],
+        }
+
+        # Build Groovy mission script for all drones
+        mission_script = textwrap.dedent("""\
+        /*
+        * multi_drone_multi_waypoint_scout.groovy
+        * Sends three drones to different waypoints and returns them home.
+        */
+        """)
+
+        for drone, waypoints in drone_waypoints.items():
+            waypoints_groovy = ",\n    ".join(
+                [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
+            )
+            mission_script += textwrap.dedent(f"""
+            {drone} = assign '{drone}'
+            arm {drone}
+            takeoff {drone}, 5.meters
+            takeoff_alt_{drone} = {drone}.position.alt
+
+            waypoints_{drone} = [
+                {waypoints_groovy}
+            ]
+
+            for (wp in waypoints_{drone}) {{
+                move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt_{drone}
+            }}
+            home {drone}
+            """)
+        return mission_script
+
     def upload_mission(self, mission_script, mission_type):
         mission_path = f"mission{mission_type}_temp.groovy"
 
@@ -132,19 +240,17 @@ class MissionPlanner:
     def execute_mission(self, mission_type, video_source):
         self.video_source = video_source
         if mission_type == 1:
-            if not self.detect_fire(video_source):
-                print("No fire detected, aborting mission")
-                return
             mission_script = self.generate_mission_1()
-            self.upload_mission(mission_script, mission_type)
+            if mission_script:
+                self.upload_mission(mission_script, mission_type)
         elif mission_type == 2:
-            if not self.detect_fire(video_source):
-                print("No fire detected, aborting mission")
-                return
             mission_script = self.generate_mission_2()
-            self.upload_mission(mission_script, mission_type)
+            if mission_script:
+                self.upload_mission(mission_script, mission_type)
         elif mission_type == 3:
-            print("Executing mission 3: Burnt area patrol")
+            mission_script = self.generate_mission_3()
+            if mission_script:
+                self.upload_mission(mission_script, mission_type)
         else :
             raise ValueError("Unsupported mission type")
 
