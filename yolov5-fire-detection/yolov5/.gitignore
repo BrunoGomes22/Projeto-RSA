@@ -256,3 +256,8 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+# mission temp files
+mission1_temp.groovy
+mission2_temp.groovy
+mission3_temp.groovy

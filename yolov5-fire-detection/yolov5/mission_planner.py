@@ -264,9 +264,18 @@ class MissionPlanner:
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
             return None
+
+        response = requests.get(
+            f"{self.gs_url}/drone",
+            headers={"Accept": "application/json"}
+        )
+
+        print(response.text)
+
+
         detected_lat, detected_lon = (40.678933958307304, -8.72272295898296)
-        grid_size = 3
-        spacing_m = 20
+        grid_size = 5
+        spacing_m = 40
 
         delta_lat = spacing_m / 111320
         delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
@@ -276,47 +285,66 @@ class MissionPlanner:
         for z in range(-offset, offset + 1):
             row = []
             for m in range(-offset, offset + 1):
-                if z == 0 and m == 0:  # skip the center
+                if z == 0 and m == 0:  # skip the center of the fire
                     continue
                 wp_lat = detected_lat + z * delta_lat
                 wp_lon = detected_lon + m * delta_lon
                 row.append((wp_lat, wp_lon))
             waypoints_grid.append(row)
         
-        # Assign each row to a drone (no overlap)
-        drone_waypoints = {
-            "drone01": waypoints_grid[0],
-            "drone02": waypoints_grid[1],
-            "drone03": waypoints_grid[2],
+        # assign each row to a drone (no overlap)
+        drone_names = ["drone01", "drone02", "drone03"]
+        #drone_waypoints = {
+        #    drone_names[i]: waypoints_grid[i] for i in range(3)
+        #}
+        drone_rows = {
+            "drone01": [waypoints_grid[0], waypoints_grid[3]],  # top and lower-middle
+            "drone02": [waypoints_grid[1], waypoints_grid[4]],  # upper-middle and bottom
+            "drone03": [waypoints_grid[2]],                     # center row
         }
 
-        # Build Groovy mission script for all drones
-        mission_script = textwrap.dedent("""\
-        /*
-        * multi_drone_multi_waypoint_scout.groovy
-        * Sends three drones to different waypoints and returns them home.
-        */
-        """)
+        drone_waypoints = {
+            drone: [wp for row in rows for wp in row]
+            for drone, rows in drone_rows.items()
+        }
 
+        # assign all drones at once
+        assign_line = f"({', '.join(drone_names)}) = assign {', '.join([repr(d) for d in drone_names])}"
+
+        # build parallel run blocks for each drone
+        run_blocks = []
         for drone, waypoints in drone_waypoints.items():
-            waypoints_groovy = ",\n    ".join(
+            waypoints_groovy = ",\n        ".join(
                 [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
             )
-            mission_script += textwrap.dedent(f"""
-            {drone} = assign '{drone}'
+            run_blocks.append(f"""{{ 
             arm {drone}
             takeoff {drone}, 5.meters
             takeoff_alt_{drone} = {drone}.position.alt
-
             waypoints_{drone} = [
                 {waypoints_groovy}
             ]
-
             for (wp in waypoints_{drone}) {{
                 move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt_{drone}
             }}
             home {drone}
-            """)
+        }}""")
+
+        # compose the mission script using run/wait for parallel execution
+        mission_script = textwrap.dedent(f"""\
+        /*
+        * multi_drone_multi_waypoint_scout_parallel.groovy
+        * Sends three drones to different waypoints and returns them home in parallel.
+        */
+        {assign_line}
+        (mission1, mission2, mission3) = run(
+            {',\n        '.join(run_blocks)}
+        )
+        wait mission1
+        wait mission2
+        wait mission3
+        """)
+
         return mission_script
 
     def upload_mission(self, mission_script, mission_type):
