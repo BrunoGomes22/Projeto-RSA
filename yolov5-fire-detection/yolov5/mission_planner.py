@@ -4,6 +4,9 @@ import math
 import argparse
 import subprocess
 import os
+import numpy as np
+from scipy.spatial import Voronoi
+
 class MissionPlanner:
     def __init__(self):
         self.gs_url = "http://localhost:8001"
@@ -204,8 +207,12 @@ class MissionPlanner:
             headers={"Accept": "application/json"}
         )
 
-        print(response.text)
-
+        drones_data = response.json()
+        drone_homes = {}
+        for drone in drones_data:
+            drone_id = drone['info']['droneId']
+            home = drone['telem']['home']
+            drone_homes[drone_id] = (home['lat'], home['lon']) # get starting position of each drone
 
         detected_lat, detected_lon = (40.678933958307304, -8.72272295898296)
         grid_size = 5
@@ -214,33 +221,26 @@ class MissionPlanner:
         delta_lat = spacing_m / 111320
         delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
 
-        waypoints_grid = []
+        # Build grid of waypoints
+        waypoints = []
         offset = grid_size // 2
         for z in range(-offset, offset + 1):
-            row = []
             for m in range(-offset, offset + 1):
-                if z == 0 and m == 0:  # skip the center of the fire
+                if z == 0 and m == 0:
                     continue
                 wp_lat = detected_lat + z * delta_lat
                 wp_lon = detected_lon + m * delta_lon
-                row.append((wp_lat, wp_lon))
-            waypoints_grid.append(row)
-        
-        # assign each row to a drone (no overlap)
-        drone_names = ["drone01", "drone02", "drone03"]
-        #drone_waypoints = {
-        #    drone_names[i]: waypoints_grid[i] for i in range(3)
-        #}
-        drone_rows = {
-            "drone01": [waypoints_grid[0], waypoints_grid[3]],  # top and lower-middle
-            "drone02": [waypoints_grid[1], waypoints_grid[4]],  # upper-middle and bottom
-            "drone03": [waypoints_grid[2]],                     # center row
-        }
+                waypoints.append((wp_lat, wp_lon))
 
-        drone_waypoints = {
-            drone: [wp for row in rows for wp in row]
-            for drone, rows in drone_rows.items()
-        }
+        # Assign each waypoint to the closest drone (Voronoi partitioning)
+        drone_names = list(drone_homes.keys())
+        drone_points = np.array([drone_homes[d] for d in drone_names])
+        drone_waypoints = {d: [] for d in drone_names}
+
+        for wp in waypoints:
+            dists = np.linalg.norm(drone_points - np.array(wp), axis=1)
+            closest_drone = drone_names[np.argmin(dists)]
+            drone_waypoints[closest_drone].append(wp)
 
         # assign all drones at once
         assign_line = f"({', '.join(drone_names)}) = assign {', '.join([repr(d) for d in drone_names])}"
