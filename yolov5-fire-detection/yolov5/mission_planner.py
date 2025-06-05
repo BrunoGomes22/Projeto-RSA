@@ -139,6 +139,15 @@ class MissionPlanner:
         except requests.RequestException as e:
             print(f"Error stopping mission {mission_id}: {str(e)}")
 
+    @staticmethod
+    def haversine(lat1, lon1, lat2, lon2): # returns distance in meters between two lat/lon points
+        R = 6371000
+        phi1, phi2 = np.radians(lat1), np.radians(lat2)
+        dphi = np.radians(lat2 - lat1)
+        dlambda = np.radians(lon2 - lon1)
+        a = np.sin(dphi/2)**2 + np.cos(phi1)*np.cos(phi2)*np.sin(dlambda/2)**2
+        return 2*R*np.arcsin(np.sqrt(a))
+
 
     def generate_mission_1(self):
         if not self.detect_fire(self.video_source):
@@ -280,33 +289,63 @@ class MissionPlanner:
             home = drone['telem']['home']
             drone_homes[drone_id] = (home['lat'], home['lon']) # get starting position of each drone
 
-        detected_lat, detected_lon = (40.678933958307304, -8.72272295898296)
-        grid_size = 5
-        spacing_m = 40
+        detected_lat, detected_lon = (40.678933958307304, -8.72272295898296) # coords of detected fire
+        grid_size = 5 # 5x5 grid of waypoints around the fire
+        spacing_m = 40 # meters between waypoints
 
         delta_lat = spacing_m / 111320
         delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
 
-        # Build grid of waypoints
+        # build grid of waypoints (2D grid for static partioning and flat list for Voronoi)
+        waypoints_grid = []
         waypoints = []
         offset = grid_size // 2
         for z in range(-offset, offset + 1):
+            row = []
             for m in range(-offset, offset + 1):
                 if z == 0 and m == 0:
                     continue
                 wp_lat = detected_lat + z * delta_lat
                 wp_lon = detected_lon + m * delta_lon
+                row.append((wp_lat, wp_lon))
                 waypoints.append((wp_lat, wp_lon))
+            waypoints_grid.append(row)
 
-        # Assign each waypoint to the closest drone (Voronoi partitioning)
         drone_names = list(drone_homes.keys())
-        drone_points = np.array([drone_homes[d] for d in drone_names])
-        drone_waypoints = {d: [] for d in drone_names}
 
-        for wp in waypoints:
-            dists = np.linalg.norm(drone_points - np.array(wp), axis=1)
-            closest_drone = drone_names[np.argmin(dists)]
-            drone_waypoints[closest_drone].append(wp)
+        # --- decide the partitioning method ---
+        # compute max pairwise distance between drones
+        max_dist = 0
+        for i in range(len(drone_names)):
+            for j in range(i+1, len(drone_names)):
+                lat1, lon1 = drone_homes[drone_names[i]]
+                lat2, lon2 = drone_homes[drone_names[j]]
+                d = self.haversine(lat1, lon1, lat2, lon2)
+                if d > max_dist:
+                    max_dist = d
+
+        DIST_THRESHOLD = 20  # meters
+
+        if max_dist < DIST_THRESHOLD:
+            # --- Static partitioning (row assignment) ---
+            drone_rows = {
+                drone_names[0]: [waypoints_grid[0], waypoints_grid[3]],
+                drone_names[1]: [waypoints_grid[1], waypoints_grid[4]],
+                drone_names[2]: [waypoints_grid[2]],
+            }
+            drone_waypoints = {
+                drone: [wp for row in rows for wp in row]
+                for drone, rows in drone_rows.items()
+            }
+        else:
+            # --- Voronoi partitioning --- (more dynamic)
+            all_waypoints = [wp for row in waypoints_grid for wp in row]
+            drone_points = np.array([drone_homes[d] for d in drone_names])
+            drone_waypoints = {d: [] for d in drone_names}
+            for wp in all_waypoints:
+                dists = np.linalg.norm(drone_points - np.array(wp), axis=1)
+                closest_drone = drone_names[np.argmin(dists)]
+                drone_waypoints[closest_drone].append(wp)
 
         # assign all drones at once
         assign_line = f"({', '.join(drone_names)}) = assign {', '.join([repr(d) for d in drone_names])}"
