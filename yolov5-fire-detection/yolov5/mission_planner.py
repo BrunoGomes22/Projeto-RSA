@@ -156,23 +156,23 @@ class MissionPlanner:
         self.fire_coords = (40.678933958307304, -8.72272295898296) 
         detected_lat, detected_lon = self.fire_coords
 
-        #Grid generation
-        grid_size = 3 # 3x3 grid
-        spacing_m = 20 # meters between waypoints
-        delta_lat = spacing_m / 111320
-        delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
+        # spiral parameters
+        num_loops = 4         # number of spiral loops
+        points_per_loop = 8   # waypoints per loop
+        spacing_m = 20        # distance between loops (meters)
 
         waypoints = []
-        offset = grid_size // 2
-        for z in range(-offset, offset + 1):
-            for m in range(-offset, offset + 1):
-                if z == 0 and m == 0: # skip the center waypoint (directly above the fire)
-                    continue
-                wp_lat = detected_lat + z * delta_lat
-                wp_lon = detected_lon + m * delta_lon
+        for loop in range(1, num_loops + 1):
+            radius = loop * spacing_m  # each loop wil be further out
+            for i in range(points_per_loop):
+                angle = 2 * math.pi * i / points_per_loop
+                dlat = (radius * math.cos(angle)) / 111320
+                dlon = (radius * math.sin(angle)) / (111320 * math.cos(math.radians(detected_lat)))
+                wp_lat = detected_lat + dlat
+                wp_lon = detected_lon + dlon
                 waypoints.append((wp_lat, wp_lon))
 
-        #Generate mission script
+        #generate mission script
         waypoints_groovy = ",\n    ".join(
             [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
         )
