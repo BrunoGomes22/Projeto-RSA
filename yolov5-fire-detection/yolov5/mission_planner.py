@@ -4,6 +4,8 @@ import math
 import argparse
 import subprocess
 import os
+import time
+
 class MissionPlanner:
     def __init__(self):
         self.gs_url = "http://localhost:8001"
@@ -77,7 +79,7 @@ class MissionPlanner:
             available_drones = []
 
             for drone in drones_data:
-                if drone['info']['state'] == 'ready':
+                if drone['info']['state'] in ['ready', 'readyinair']:
                     available_drones.append(drone['info']['droneId'])
 
             self.log(f"Available drones: {available_drones}")
@@ -187,21 +189,13 @@ class MissionPlanner:
         """)
         return mission_script
     
-    def generate_mission_2(self):
+    def generate_mission_2(self, fire_lat, fire_lon, side_m, is_restart=False):
         all_drones = self.get_available_drones()
         if not all_drones:
             print("No available drones found. Exiting mission generation.")
             return None
-
-        if not self.detect_fire(self.video_source):
-            print("No fire detected. Exiting mission generation.")
-            return None
-
         drones = all_drones[:2]  # Take first 2 drones
 
-        fire_lat, fire_lon = (40.678933958307304, -8.72272295898296)
-
-        side_m = 200
         half_side = side_m / 2
         delta_lat = half_side / 111320
         delta_lon = half_side / (111320 * math.cos(math.radians(fire_lat)))
@@ -232,18 +226,33 @@ class MissionPlanner:
             waypoints_groovy = ",\n                ".join(
                 [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
             )
-            block = f"""{{ 
-                arm {drone}
-                takeoff {drone}, 5.meters
-                takeoff_alt = {drone}.position.alt
-                waypoints = [
-                    {waypoints_groovy}
-                ]
-                for (wp in waypoints) {{
-                    move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt
-                }}
-                home {drone}
-            }}"""
+            
+            if is_restart:
+                # Skip arm and takeoff for restarted missions
+                block = f"""{{
+                    // Drone already in air - proceeding directly to waypoints
+                    waypoints = [
+                        {waypoints_groovy}
+                    ]
+                    for (wp in waypoints) {{
+                        move {drone}, lat: wp.lat, lon: wp.lon
+                    }}
+                    home {drone}
+                }}"""
+            else:
+                # Initial mission includes arm and takeoff
+                block = f"""{{
+                    arm {drone}
+                    takeoff {drone}, 5.meters
+                    takeoff_alt = {drone}.position.alt
+                    waypoints = [
+                        {waypoints_groovy}
+                    ]
+                    for (wp in waypoints) {{
+                        move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt
+                    }}
+                    home {drone}
+                }}"""
             mission_blocks.append(block)
 
         # Generate mission script
@@ -253,7 +262,7 @@ class MissionPlanner:
 
         return f"""/*
     * PARALLEL PERIMETER PATROL (MAX 2 DRONES)
-    * Drones split perimeter coverage for efficiency
+    * Drones split perimeter coverage for efficiency and adapt to new fire coordinates.
     */
     {assignment_lines}
     {run_line}
@@ -369,9 +378,58 @@ class MissionPlanner:
             if mission_script:
                 self.upload_mission(mission_script, mission_type)
         elif mission_type == 2:
-            mission_script = self.generate_mission_2()
-            if mission_script:
-                self.upload_mission(mission_script, mission_type)
+            initial_side_m = 200
+            current_side_m = initial_side_m
+            is_restart = False
+            
+            if not self.detect_fire(self.video_source):
+                print("No fire detected. Exiting mission generation.")
+                return None
+            
+            # Generate and upload initial mission
+            mission_script = self.generate_mission_2(40.678933958307304, -8.72272295898296, 
+                                                current_side_m, is_restart)
+            if mission_script is None:
+                print("Mission generation failed (no drones available). Exiting.")
+                return None
+                
+            self.upload_mission(mission_script, mission_type)
+            
+            # Monitoring loop
+            while True:
+                time.sleep(5) 
+                drone_positions = self.get_drones_postions()
+                print("Current drone positions:", drone_positions)
+                
+                # Check if any drone is near fire coordinates
+                for drone_id, (lat, lon) in drone_positions.items():
+                    if abs(lat - 40.6784655) < 0.0001 and abs(lon - -8.7239056) < 0.0001:
+                        print(f"Drone {drone_id} is near the fire coordinates!")
+                        
+                        if not self.detect_fire(self.video_source):
+                            print("No fire detected. Exiting mission generation.")
+                            return None
+                        
+                        print(f"Fire detected by drone {drone_id} at coordinates ({lat}, {lon})")
+                        mission_id = self.get_drone_mission(drone_id)
+                        
+                        if mission_id:
+                            print(f"Stopping mission {mission_id}")
+                            self.stop_mission(mission_id)
+                            time.sleep(5)
+                            
+                            # Double the side length and restart
+                            current_side_m *= 2
+                            is_restart = True
+                            new_mission = self.generate_mission_2(lat, lon, current_side_m, is_restart)
+                            
+                            if new_mission is None:
+                                print("Failed to generate new mission. Exiting.")
+                                return None
+                                
+                            self.upload_mission(new_mission, mission_type)
+                        else:
+                            print(f"No active mission found for drone {drone_id}")
         elif mission_type == 3:
             mission_script = self.generate_mission_3()
             if mission_script:
