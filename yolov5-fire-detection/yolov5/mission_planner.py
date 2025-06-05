@@ -110,7 +110,13 @@ class MissionPlanner:
         """)
         return mission_script
     
-    def upload_mission(self, mission_script, mission_path="mission1_temp.groovy"):
+    def generate_mission_2(self):
+
+        return 
+    
+    def upload_mission(self, mission_script, mission_type):
+        mission_path = f"mission{mission_type}_temp.groovy"
+
         with open(mission_path, "w") as f:
             f.write(mission_script)
         with open(mission_path, "rb") as f:
@@ -130,7 +136,15 @@ class MissionPlanner:
                 print("No fire detected, aborting mission")
                 return
             mission_script = self.generate_mission_1()
-            self.upload_mission(mission_script)
+            self.upload_mission(mission_script, mission_type)
+        elif mission_type == 2:
+            if not self.detect_fire(video_source):
+                print("No fire detected, aborting mission")
+                return
+            mission_script = self.generate_mission_2()
+            self.upload_mission(mission_script, mission_type)
+        elif mission_type == 3:
+            print("Executing mission 3: Burnt area patrol")
         else :
             raise ValueError("Unsupported mission type")
 
