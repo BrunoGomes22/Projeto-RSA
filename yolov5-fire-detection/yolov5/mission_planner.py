@@ -87,6 +87,56 @@ class MissionPlanner:
             self.log(f"Error fetching drones: {str(e)}")
             return []
         
+    def get_drone_mission(self, drone_id):
+        try:
+            response = requests.get(
+                f"{self.gs_url}/drone/{drone_id}?data=info",
+                headers={"Accept": "application/json"}
+            )
+            if not response.ok:
+                self.log(f"Failed to get drone info: {response.status_code}")
+                return None 
+            data = response.json()
+            return data.get("mission", None)
+        except requests.RequestException as e:
+            self.log(f"Request failed: {e}")
+            return None
+
+        
+    def get_drones_postions(self):
+        try:
+            response = requests.get(
+                f"{self.gs_url}/drone?data=telem",
+                headers={"Accept": "application/json"}
+            )
+            if not response.ok:
+                self.log(f"Failed to get drone positions: {response.status_code}")
+                return {}
+            drones_data = response.json()
+            simple = {}
+            for drone in drones_data:
+                pid = drone['droneId']
+                pos = drone['position']
+                simple[pid] = (pos['lat'], pos['lon'])
+            return simple
+        except requests.RequestException as e:
+            self.log(f"Error fetching drone positions: {str(e)}")
+            return {}
+
+    def stop_mission(self,mission_id):
+        try:
+            response = requests.delete(
+                f"{self.gs_url}/mission/{mission_id}",
+                headers={"Accept": "application/json"}
+            )
+            if response.ok:
+                print(f"Mission {mission_id} stopped successfully.")
+            else:
+                print(f"Failed to stop mission {mission_id}: {response.status_code} {response.text}")
+        except requests.RequestException as e:
+            print(f"Error stopping mission {mission_id}: {str(e)}")
+
+
     def generate_mission_1(self):
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
@@ -138,17 +188,20 @@ class MissionPlanner:
         return mission_script
     
     def generate_mission_2(self):
-        drones = self.get_available_drones()
-        if not drones:
+        all_drones = self.get_available_drones()
+        if not all_drones:
             print("No available drones found. Exiting mission generation.")
             return None
 
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
             return None
+
+        drones = all_drones[:2]  # Take first 2 drones
+
         fire_lat, fire_lon = (40.678933958307304, -8.72272295898296)
-            
-        side_m = 40
+
+        side_m = 200
         half_side = side_m / 2
         delta_lat = half_side / 111320
         delta_lon = half_side / (111320 * math.cos(math.radians(fire_lat)))
@@ -158,42 +211,55 @@ class MissionPlanner:
             (fire_lat + delta_lat, fire_lon + delta_lon),  # NE
             (fire_lat - delta_lat, fire_lon + delta_lon),  # SE
             (fire_lat - delta_lat, fire_lon - delta_lon),  # SW
-            (fire_lat + delta_lat, fire_lon - delta_lon)  # NW again
         ]
 
-        drone_waypoints = {drone: [] for drone in drones}
-        for i, corner in enumerate(corners):
-            drone = drones[i % len(drones)]
-            drone_waypoints[drone].append(corner)
+        # Assign waypoints based on number of drones (1 or 2)
+        if len(drones) == 2:
+            # Split perimeter between 2 drones (half each)
+            drone1_waypoints = [corners[0], corners[1], corners[2]]  # NW → NE → SE
+            drone2_waypoints = [corners[2], corners[3], corners[0]]  # SE → SW → NW
+            drone_paths = {
+                drones[0]: drone1_waypoints,
+                drones[1]: drone2_waypoints
+            }
+        else:
+            # Single drone: Full perimeter patrol
+            drone_paths = {drones[0]: corners + [corners[0]]}  # Full loop (NW → NE → SE → SW → NW)
 
-        mission_lines = []
-        for drone in drones:
-            mission_lines.append(f"{drone} = assign '{drone}'")
-            mission_lines.append(f"arm {drone}")
-            mission_lines.append(f"takeoff {drone}, 5.meters")
-            mission_lines.append(f"takeoff_alt_{drone} = {drone}.position.alt")
-            if drone_waypoints[drone]:  # Only add waypoints if drone has any
-                mission_lines.append(f"waypoints_{drone} = [")
-                mission_lines.extend(
-                    [f"    [lat: {lat:.6f}, lon: {lon:.6f}]," for lat, lon in drone_waypoints[drone]]
-                )
-                mission_lines.append("]")
-                mission_lines.append(f"for (wp in waypoints_{drone}) {{")
-                mission_lines.append(f"    move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt_{drone}")
-            mission_lines.append("}")
-        
-        mission_lines.append(f"home {drone}\n")
+        # Generate mission blocks
+        mission_blocks = []
+        for drone, waypoints in drone_paths.items():
+            waypoints_groovy = ",\n                ".join(
+                [f"[lat: {lat:.6f}, lon: {lon:.6f}]" for lat, lon in waypoints]
+            )
+            block = f"""{{ 
+                arm {drone}
+                takeoff {drone}, 5.meters
+                takeoff_alt = {drone}.position.alt
+                waypoints = [
+                    {waypoints_groovy}
+                ]
+                for (wp in waypoints) {{
+                    move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt
+                }}
+                home {drone}
+            }}"""
+            mission_blocks.append(block)
 
-        mission_script = textwrap.dedent(f"""\
-        /*
-        * perimeter_patrol.groovy
-        * Available drones patrol the perimeter of a fire area.
-        */
-        """) + "\n".join(mission_lines)
+        # Generate mission script
+        assignment_lines = "\n".join([f"{drone} = assign '{drone}'" for drone in drones])
+        run_line = f"def missions = run(\n    {',\n    '.join(mission_blocks)}\n)"
+        wait_lines = "\n".join([f"wait missions[{i}]" for i in range(len(drones))])
 
-
-        return mission_script
-    
+        return f"""/*
+    * PARALLEL PERIMETER PATROL (MAX 2 DRONES)
+    * Drones split perimeter coverage for efficiency
+    */
+    {assignment_lines}
+    {run_line}
+    {wait_lines}
+    """
+                
     def generate_mission_3(self):
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
