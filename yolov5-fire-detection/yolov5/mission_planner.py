@@ -198,9 +198,18 @@ class MissionPlanner:
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
             return None
+
+        response = requests.get(
+            f"{self.gs_url}/drone",
+            headers={"Accept": "application/json"}
+        )
+
+        print(response.text)
+
+
         detected_lat, detected_lon = (40.678933958307304, -8.72272295898296)
-        grid_size = 3
-        spacing_m = 20
+        grid_size = 5
+        spacing_m = 40
 
         delta_lat = spacing_m / 111320
         delta_lon = spacing_m / (111320 * math.cos(math.radians(detected_lat)))
@@ -219,8 +228,18 @@ class MissionPlanner:
         
         # assign each row to a drone (no overlap)
         drone_names = ["drone01", "drone02", "drone03"]
+        #drone_waypoints = {
+        #    drone_names[i]: waypoints_grid[i] for i in range(3)
+        #}
+        drone_rows = {
+            "drone01": [waypoints_grid[0], waypoints_grid[3]],  # top and lower-middle
+            "drone02": [waypoints_grid[1], waypoints_grid[4]],  # upper-middle and bottom
+            "drone03": [waypoints_grid[2]],                     # center row
+        }
+
         drone_waypoints = {
-            drone_names[i]: waypoints_grid[i] for i in range(3)
+            drone: [wp for row in rows for wp in row]
+            for drone, rows in drone_rows.items()
         }
 
         # assign all drones at once
