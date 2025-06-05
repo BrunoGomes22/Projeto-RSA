@@ -61,12 +61,37 @@ class MissionPlanner:
         except Exception as e:
             self.log(f"Error during detection: {str(e)}")
             return False
-    
+
+    def get_available_drones(self):
+        try:
+            response = requests.get(
+                f"{self.gs_url}/drone",
+                headers={"Accept": "application/json"}
+            )
+            
+            if not response.ok:
+                self.log(f"Failed to get drones: {response.status_code}")
+                return []
+            
+            drones_data = response.json()
+            available_drones = []
+
+            for drone in drones_data:
+                if drone['info']['state'] == 'ready':
+                    available_drones.append(drone['info']['droneId'])
+
+            self.log(f"Available drones: {available_drones}")
+            return available_drones
+        
+        except requests.RequestException as e:
+            self.log(f"Error fetching drones: {str(e)}")
+            return []
+        
     def generate_mission_1(self):
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
             return None
-        self.fire_coords = (40.63242, -8.660162) 
+        self.fire_coords = (40.678933958307304, -8.72272295898296) 
         detected_lat, detected_lon = self.fire_coords
 
         #Grid generation
@@ -113,11 +138,16 @@ class MissionPlanner:
         return mission_script
     
     def generate_mission_2(self):
+        drones = self.get_available_drones()
+        if not drones:
+            print("No available drones found. Exiting mission generation.")
+            return None
+
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
             return None
-        fire_lat, fire_lon = (40.63242, -8.660162)
-        
+        fire_lat, fire_lon = (40.678933958307304, -8.72272295898296)
+            
         side_m = 40
         half_side = side_m / 2
         delta_lat = half_side / 111320
@@ -131,7 +161,6 @@ class MissionPlanner:
             (fire_lat + delta_lat, fire_lon - delta_lon)  # NW again
         ]
 
-        drones = ["drone01", "drone03"]
         drone_waypoints = {drone: [] for drone in drones}
         for i, corner in enumerate(corners):
             drone = drones[i % len(drones)]
@@ -143,20 +172,22 @@ class MissionPlanner:
             mission_lines.append(f"arm {drone}")
             mission_lines.append(f"takeoff {drone}, 5.meters")
             mission_lines.append(f"takeoff_alt_{drone} = {drone}.position.alt")
-            mission_lines.append(f"waypoints_{drone} = [")
-            mission_lines.extend(
-                [f"    [lat: {lat:.6f}, lon: {lon:.6f}]," for lat, lon in drone_waypoints[drone]]
-            )
-            mission_lines.append("]")
-            mission_lines.append(f"for (wp in waypoints_{drone}) {{")
-            mission_lines.append(f"    move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt_{drone}")
+            if drone_waypoints[drone]:  # Only add waypoints if drone has any
+                mission_lines.append(f"waypoints_{drone} = [")
+                mission_lines.extend(
+                    [f"    [lat: {lat:.6f}, lon: {lon:.6f}]," for lat, lon in drone_waypoints[drone]]
+                )
+                mission_lines.append("]")
+                mission_lines.append(f"for (wp in waypoints_{drone}) {{")
+                mission_lines.append(f"    move {drone}, lat: wp.lat, lon: wp.lon, alt: takeoff_alt_{drone}")
             mission_lines.append("}")
-            mission_lines.append(f"home {drone}\n")
+        
+        mission_lines.append(f"home {drone}\n")
 
         mission_script = textwrap.dedent(f"""\
         /*
         * perimeter_patrol.groovy
-        * Two drones patrol a square perimeter around a detected fire.
+        * Available drones patrol the perimeter of a fire area.
         */
         """) + "\n".join(mission_lines)
 
@@ -167,7 +198,7 @@ class MissionPlanner:
         if not self.detect_fire(self.video_source):
             print("No fire detected. Exiting mission generation.")
             return None
-        detected_lat, detected_lon = (40.63242, -8.660162)
+        detected_lat, detected_lon = (40.678933958307304, -8.72272295898296)
         grid_size = 3
         spacing_m = 20
 
