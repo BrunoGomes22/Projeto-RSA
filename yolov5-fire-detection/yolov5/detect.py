@@ -287,8 +287,7 @@ def run(
                         annotator.box_label(xyxy, label, color=colors(c, True))
                     if save_crop:
                         save_one_box(xyxy, imc, file=save_dir / "crops" / names[c] / f"{p.stem}.jpg", BGR=True)
-            if fire_alert_sent:
-                break
+
             # Stream results
             im0 = annotator.result()
             if view_img:
