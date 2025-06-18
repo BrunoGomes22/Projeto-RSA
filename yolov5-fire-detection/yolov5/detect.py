@@ -266,7 +266,6 @@ def run(
                     if not fire_alert_sent and names[c].lower() == "fire":
                         fire_alert_sent = True 
                         LOGGER.info("Fire detected! Sending alert to ground station...")
-                        break
                     if save_csv:
                         write_to_csv(p.name, label, confidence_str)
 
