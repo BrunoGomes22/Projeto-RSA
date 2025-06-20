@@ -1,0 +1,13 @@
+[Unit]
+Description=Start droneService
+After=rosbridge.target
+
+[Service]
+Environment=SCRIPT_DIR=/home/ubuntu/fleet-manager/scripts
+Environment=DRONE_ID=drone01
+Environment=DRONE_CFG=/home/ubuntu/fleet-manager/configs/drone_cfg_serial.yml
+ExecStart=/bin/bash ${SCRIPT_DIR}}/launch_drone_container.sh ${DRONE_ID} -c ${DRONE_CFG}
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

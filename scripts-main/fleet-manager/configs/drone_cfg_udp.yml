@@ -1,0 +1,11 @@
+port: "udp://:14540"
+telemetryTopic: /telem
+commandTopic: /cmd
+statusTopic: /status
+telemetryRateMs: 200
+acceptanceRadius: 0.5
+takeoffAltitude: 10.0
+returnAltitude: 10.0
+maxSpeed: 5.0
+assignable: true
+reconnectMode: 2

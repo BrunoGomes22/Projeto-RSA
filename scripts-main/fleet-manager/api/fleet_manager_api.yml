@@ -1,0 +1,1205 @@
+openapi: "3.0.0"
+
+info:
+  title: Fleet Manager
+  version: "1.9.0"
+  description: API to communicate with the ground station that manages the drone fleet. This allows to send commands to a drone, retrieving its status and submitting missions.
+  contact:
+    email: margaridaocs@ua.pt
+
+servers:
+  - url: http://localhost:8001/
+
+tags:
+  - name: drone
+    description: Operations on the drones, such as status management and sending a direct Mavlink command.
+  - name: mission
+    description: Manage submitted missions.
+  - name: plugin
+    description: Manage mission plugins
+
+paths:
+  /drone:
+    get:
+      tags:
+        - drone
+      summary: Lists all discoverable drones, filtered by status or sensors.
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/DroneState"
+        - name: sensors
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: data
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - telem
+              - info
+
+      responses:
+        200:
+          description: Successfully retrieved drone information.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: "#/components/schemas/Drone"
+                    - $ref: "#/components/schemas/Telemetry"
+                    - type: object
+                      properties:
+                        info:
+                          $ref: "#/components/schemas/Drone"
+                        telemetry:
+                          $ref: "#/components/schemas/Telemetry"
+
+        default:
+          description: Unexpected error.
+
+  /drone/{droneId}:
+    get:
+      tags:
+        - drone
+      summary: Returns drone information and/or telemetry data.
+      parameters:
+        - name: droneId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: data
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - telem
+              - info
+      responses:
+        200:
+          description: Successfully retrieved drone information.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Drone"
+                  - $ref: "#/components/schemas/Telemetry"
+                  - type: object
+                    properties:
+                      info:
+                        $ref: "#/components/schemas/Drone"
+                      telemetry:
+                        $ref: "#/components/schemas/Telemetry"
+        404:
+          description: No drone with given id found.
+        default:
+          description: Unexpected error.
+
+  /drone/{droneId}/cmd:
+    post:
+      tags:
+        - drone
+      summary: Send command to be executed in drone.
+      parameters:
+        - name: droneId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/ActionCmd"
+                - $ref: "#/components/schemas/GotoCoordsCmd"
+                - $ref: "#/components/schemas/TakeoffLandCmd"
+                - $ref: "#/components/schemas/CustomCmd"
+                - $ref: "#/components/schemas/MoveCmd"
+                - $ref: "#/components/schemas/TurnCmd"
+                - $ref: "#/components/schemas/NedCmd"
+                - $ref: "#/components/schemas/BodyCoordsCmd"
+                - $ref: "#/components/schemas/AttitudeCmd"
+                - $ref: "#/components/schemas/ActuatorCmd"
+      responses:
+        200:
+          description: Successfully submitted command.
+        400:
+          description: Nonexistent Mavlink Command or param in invalid range.
+        404:
+          description: No drone with given id found.
+        409:
+          description: Drone can't currently execute command.
+        default:
+          description: "Unexpected error"
+
+  /drone/{droneId}/params:
+    get:
+      tags:
+        - drone
+      summary: Get drone's parameters
+      parameters:
+        - name: droneId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully retrieved parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+        404:
+          description: No drone with given id found.
+    patch:
+      tags:
+        - drone
+      summary: Set drone's parameters
+      parameters:
+        - name: droneId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+      responses:
+        204:
+          description: Successfully updated parameter.
+        400:
+          description: Provided invalid syntax or failed to set parameter.
+          content:
+            application/json:
+              schema:
+                properties:
+                  parameter:
+                    type: string
+                  cause:
+                    type: string
+        404:
+          description: No drone with given id found.
+        default:
+          description: Unexpected error.
+
+  /drone/{droneId}/params/{param}:
+    get:
+      tags:
+        - drone
+      summary: Get drone's parameter
+      parameters:
+        - name: droneId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: param
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully retrieved parameter.
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: No drone with given id found or parameter does not exist.
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /drone/logs:
+    get:
+      tags:
+        - drone
+      summary: Returns drone's status logging
+      parameters:
+        - name: droneId
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: loglevel
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - info
+                - warn
+                - error
+      responses:
+        200:
+          description: Successfully retrieved logs.
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: Unexpected error.
+
+
+  /mission:
+    get:
+      tags:
+        - mission
+      summary: Returns missions filtered by status.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/MissionStatus'
+      responses:
+        200:
+          description:  Successfully retrieved missions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mission"
+        default:
+          description: Unexpected error
+    post:
+      tags:
+        - mission
+      summary: Create new mission.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        201:
+          description: Successfully submitted mission.
+          content:
+            application/json:
+              schema:
+                properties:
+                  missionId:
+                    type: string
+        400:
+          description: Provided empty script file.
+        default:
+          description: Unexpected error.
+  /mission/{missionId}:
+    get:
+      tags:
+        - mission
+      summary: Returns mission information.
+      parameters:
+        - name: missionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully retrieved mission.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mission"
+        404:
+          description: No mission with given id found.
+        default:
+          description: Unexpected error.
+    delete:
+      tags:
+        - mission
+      summary: Cancel mission.
+      parameters:
+        - name: missionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully cancelled mission.
+        404:
+          description: No mission with given id found.
+        default:
+          description: Unexpected error.
+
+  /plugin:
+    get:
+      tags:
+        - plugin
+      summary: Returns plugin information, filtered by type
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/PluginType'
+      responses:
+        200:
+          description: Successfully retrieved plugins.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plugin"
+        default:
+          description: Unexpected error
+    post:
+      tags:
+        - plugin
+      summary: Upload new plugin.
+      requestBody:
+        required: true
+        content:
+          text/yaml:
+            schema:
+              type: string
+      responses:
+        201:
+          description: Successfully created plugin.
+          content:
+            application/json:
+              schema:
+                properties:
+                  pluginId:
+                    type: string
+        400:
+          description: Plugin script contains errors.
+        409:
+          description: Plugin with this ID already exists.
+        default:
+          description: Unexpected error.
+  /plugin/{pluginId}:
+    get:
+      tags:
+        - plugin
+      summary: Returns plugin information.
+      parameters:
+        - name: pluginId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully retrieved plugin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plugin"
+        404:
+          description: No plugin with given id found.
+        default:
+          description: Unexpected error.
+    put:
+      tags:
+        - plugin
+      summary: Upload or update plugin.
+      requestBody:
+        required: true
+        content:
+          text/yaml:
+            schema:
+              type: string
+      parameters:
+        - name: pluginId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully updated plugin.
+        201:
+          description: Sucessfully created plugin.
+        400:
+          description: Plugin script contains errors.
+        409:
+          description: Plugin configuration's ID does not match the provided ID.
+        default:
+          description: Unexpected error.
+    delete:
+      tags:
+        - plugin
+      summary: Delete plugin.
+      parameters:
+        - name: pluginId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully deleted plugin.
+        404:
+          description: No plugin with given id found.
+        default:
+          description: Unexpected error.
+
+  /sensor:
+    get:
+      tags:
+        - sensor
+      summary: Returns sensor data
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: sensorId
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: droneId
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: Successfully retrieved sensor data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorData"
+        404:
+          description: The provided sensor type or drone ID was not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: Unexpected error
+
+  /sensor/config:
+    get:
+      tags:
+        - sensor
+      summary: Returns sensor configuration parameters
+      responses:
+        200:
+          description: Successfully retrieved sensor configuration parameters.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorConfig"
+        default:
+          description: Unexpected error
+    post:
+      tags:
+        - sensor
+      summary: Upload new sensor configuration.
+      requestBody:
+        required: true
+        content:
+          application/yaml:
+            schema:
+              type: string
+              format: binary
+      responses:
+        201:
+          description: Successfully defined new sensor configuration.
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+        400:
+          description: Sensor configuration contains errors.
+        409:
+          description: Sensor configuration with this type already exists.
+        default:
+          description: Unexpected error.
+  /sensor/config/{type}:
+    get:
+      tags:
+        - sensor
+      summary: Returns sensor configuration parameters
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully retrieved sensor configuration parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SensorConfig"
+        404:
+          description: No sensor configuration with given type found.
+        default:
+          description: Unexpected error
+    put:
+      tags:
+        - sensor
+      summary: Upload or update sensor configuration.
+      requestBody:
+        required: true
+        content:
+          application/yaml:
+            schema:
+              type: string
+              format: binary
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully updated sensor configuration.
+        201:
+          description: Sucessfully defined new sensor configuration.
+        400:
+          description: Sensor configuration contains errors.
+        409:
+          description: Sensor configuration's type does not match the provided type.
+        default:
+          description: Unexpected error.
+    delete:
+      tags:
+        - sensor
+      summary: Delete sensor configuration.
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully deleted sensor configuration.
+        404:
+          description: No sensor configuration with given type found.
+        default:
+          description: Unexpected error.
+
+
+components:
+  schemas:
+    Drone:
+      description: Drone properties
+      properties:
+        droneId:
+          description: Drone identifier
+          type: string
+        state:
+          $ref: "#/components/schemas/DroneState"
+        currentCommand:
+          $ref: "#/components/schemas/Command"
+        errors:
+          description: Current errors
+          type: array
+          items:
+            type: string
+            enum:
+              - battery_crit
+              - health_fail
+        warns:
+          description: Current warnings
+          type: array
+          items:
+            type: string
+            enum:
+              - battery_low
+              - sys_disconnect
+        sensors:
+          description: Available sensors in this drone
+          type: array
+          items:
+            type: string
+        mission:
+          description: Mission this drone is currently assigned to.
+          nullable: true
+          type: string
+        remoteTask:
+          description: Remote task currently running in this drone.
+          nullable: true
+          type: string
+
+    DroneState:
+      description: Drone's current state
+      type: string
+      enum:
+        - unknown
+        - error
+        - manual
+        - active
+        - hold
+        - ready
+
+    Telemetry:
+      description: Telemetry data
+      properties:
+        droneId:
+          description: Drone identifier
+          nullable: true
+          type: string
+        armed:
+          description: Whether the drone is armed or not
+          type: boolean
+        position:
+          $ref: "#/components/schemas/Position"
+        positionNED:
+          $ref: "#/components/schemas/NedCoordinates"
+        velocityNED:
+          $ref: "#/components/schemas/NedCoordinates"
+        heading:
+          description: Yaw angle in degrees
+          type: number
+        speed:
+          description: Current drone speed in m/s
+          type: number
+        gpsInfo:
+          description: Gps information
+          properties:
+            satellites:
+              type: number
+              format: int
+            fixType:
+              type: string
+              enum:
+                - no_gps
+                - no_fix
+                - fix_2d
+                - fix_3d
+                - fix_dgps
+                - rtk_float
+                - rtk_fixed
+        home:
+          $ref: "#/components/schemas/Position"
+        flightMode:
+          description: Drone's active flight mode
+          type: string
+          enum:
+            - unknown
+            - ready
+            - takeoff
+            - hold
+            - mission
+            - return_to_launch
+            - land
+            - offboard
+            - follow_me
+            - manual
+            - altctl
+            - posctl
+            - acro
+            - stabilized
+            - rattitude
+        landState:
+          description: Drone's landing state
+          type: string
+          enum:
+            - unknown
+            - on_ground
+            - in_air
+            - taking_off
+            - landing
+        battery:
+          description: Battery status
+          properties:
+            voltage:
+              type: number
+              format: float
+            percentage:
+              type: number
+              format: float
+        healthFailures:
+          description: Health measures that need to be checked
+          type: array
+          items:
+            $ref: "#/components/schemas/Health"
+        timestamp:
+          description: Timestamp of the last telemetry message
+          type: string
+          format: date
+
+    Command:
+      nullable: true
+      properties:
+        description:
+          type: string
+        timestamp:
+          description: Timestamp of the transition to this specific state
+          type: string
+          format: date
+
+    Mission:
+      description: Mission as retrieved from the system.
+      properties:
+        missionId:
+          description: Mission identifier
+          nullable: true
+          type: string
+        status:
+          $ref: "#/components/schemas/MissionStatus"
+        start:
+          description: Timestamp of the beginning of this mission
+          type: string
+          format: date
+        end:
+          description: Timestamp of the conclusion of this mission
+          type: string
+          format: date
+          nullable: true
+        plugins:
+          description: Enabled plugins in this mission
+          type: array
+          nullable: true
+          items:
+            type: string
+        activeDrones:
+          description: Drones that are currently assigned to this mission
+          type: array
+          nullable: true
+          items:
+            type: string
+        usedDrones:
+          description: Drones that have been assigned to this mission
+          type: array
+          nullable: true
+          items:
+            type: string
+        cause:
+          description: Cause of mission failure
+          type: string
+        remoteTasks:
+          description: Remote tasks of this mission
+          type: array
+          items:
+            $ref: "#/components/schemas/RemoteTask"
+
+    MissionStatus:
+      description: Mission's running status
+      type: string
+      enum:
+        - pending
+        - running
+        - finished
+        - failed
+
+    RemoteTask:
+      description: Info about a task running remotely on drone's hardware
+      properties:
+        taskType:
+          type: string
+        droneId:
+          type: string
+        state:
+          $ref: "#/components/schemas/RemoteTaskState"
+        progress:
+          type: number
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+
+    RemoteTaskState:
+      description: State of remote task
+      type: string
+      enum:
+        - stopped
+        - paused
+        - running
+        - emergency
+
+    SensorData:
+      description: Sensor data
+      properties:
+        type:
+          type: string
+        timestamp:
+          type: string
+          format: date
+        sensorId:
+          type: string
+          nullable: true
+        droneId:
+          type: string
+          nullable: true
+        value:
+          type: object
+
+    SensorConfig:
+      description: Sensor configuration parameters
+      properties:
+        type:
+          type: string
+        requiresDrone:
+          type: boolean
+        requiresSensorId:
+          type: boolean
+        retrieval:
+          $ref: "#/components/schemas/RetrievalStrategy"
+        parameters:
+          type: object
+        timeout:
+          type: number
+          format: int64
+
+    RetrievalStrategy:
+      description: How to retrieve this sensor type's data when there are multiple sensors of the same type
+      type: string
+      enum:
+        - latest
+        - list
+        - map
+
+    Plugin:
+      description: Plugin as retrieved from the system
+      properties:
+        pluginId:
+          description: Plugin ID
+          type: string
+        type:
+          $ref: "#/components/schemas/PluginType"
+        input:
+          type: array
+          items:
+            $ref: "#/components/schemas/PluginInput"
+        missions:
+          description: Missions in which it is currently enabled
+          type: array
+          nullable: true
+          items:
+            type: string
+
+    PluginType:
+      description: Available plugin types
+      type: string
+      enum:
+        - monitoring
+
+    PluginInput:
+      description: Plugin input variable
+      properties:
+        property:
+          type: string
+        type:
+          type: string
+        default:
+          type: string
+
+    Health:
+      description: Drone's health measures
+      type: string
+      enum:
+        - gyrometer
+        - accelerometer
+        - magnetometer
+        - level
+        - localPos
+        - globalPos
+        - homePos
+
+    Position:
+      description: position in WGS84
+      nullable: true
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+        alt:
+          type: number
+
+    NedCoordinates:
+      description: coordinates in North-East-Down
+      nullable: true
+      properties:
+        north:
+          type: number
+        east:
+          type: number
+        down:
+          type: number
+
+    Action:
+      description: Mavsdk action command enumerate
+      type: string
+      enum:
+        - arm
+        - disarm
+        - takeoff
+        - land
+        - goto
+        - return
+
+    Custom:
+      description: Custom commands enumerate
+      type: string
+      enum:
+        - cancel
+        - move
+        - turn
+
+    Offboard:
+      description: Mavsdk offboard command enumerate
+      type: string
+      enum:
+        - start
+        - stop
+        - position_ned
+        - velocity_ned
+        - velocity_body
+        - attitude
+        - attitude_rate
+        - actuator_control
+
+
+    ActionCmd:
+      allOf:
+        - description: Action command
+        - type: object
+          properties:
+            mode:
+              description: MAVSDK command mode
+              type: string
+              enum:
+                - action
+        - type: object
+          properties:
+            cmd:
+              $ref: '#/components/schemas/Action'
+
+    OffboardCmd:
+      allOf:
+        - description: Offboard command
+        - type: object
+          properties:
+            mode:
+              description: MAVSDK command mode
+              type: string
+              enum:
+                - offboard
+        - type: object
+          properties:
+            cmd:
+              $ref: '#/components/schemas/Offboard'
+
+    CustomCmd:
+      allOf:
+        - description: Custom command
+        - type: object
+          properties:
+            mode:
+              description: MAVSDK command mode
+              type: string
+              enum:
+                - custom
+        - type: object
+          properties:
+            cmd:
+              $ref: '#/components/schemas/Custom'
+
+    TakeoffLandCmd:
+      allOf:
+        - $ref: '#/components/schemas/ActionCmd'
+        - type: object
+          properties:
+            alt:
+              description: Altitude
+              type: number
+              format: float
+              nullable: true
+
+    GotoCoordsCmd:
+      allOf:
+        - $ref: '#/components/schemas/ActionCmd'
+        - type: object
+        - required: [lat, lon]
+          properties:
+            lat:
+              description: Latitude to move to
+              type: number
+              format: double
+            lon:
+              description: Longitude to move to
+              type: number
+              format: double
+            alt:
+              description: Altitude
+              type: number
+              format: float
+              nullable: true
+            yaw:
+              description: Yaw
+              type: number
+              format: float
+              nullable: true
+            speed:
+              description: Speed
+              type: number
+              format: float
+              nullable: true
+
+    MoveCmd:
+      allOf:
+        - $ref: '#/components/schemas/CustomCmd'
+        - type: object
+        - required: [x, y, z]
+          properties:
+            x:
+              type: number
+              format: double
+            y:
+              description: Longitude to move to
+              type: number
+              format: double
+            z:
+              description: Altitude
+              type: number
+              format: float
+              nullable: true
+            yaw:
+              description: Yaw
+              type: number
+              format: float
+              nullable: true
+            speed:
+              description: Speed
+              type: number
+              format: float
+              nullable: true
+
+    TurnCmd:
+      allOf:
+        - $ref: '#/components/schemas/CustomCmd'
+        - type: object
+        - required: [deg]
+          properties:
+            deg:
+              type: number
+              format: float
+
+    NedCmd:
+      allOf:
+        - $ref: '#/components/schemas/OffboardCmd'
+        - type: object
+          properties:
+            north:
+              type: number
+              format: double
+            east:
+              type: number
+              format: double
+            down:
+              type: number
+              format: double
+            yaw:
+              type: number
+              format: double
+
+    BodyCoordsCmd:
+      allOf:
+        - $ref: '#/components/schemas/OffboardCmd'
+        - type: object
+          properties:
+            forward:
+              type: number
+              format: double
+            right:
+              type: number
+              format: double
+            down:
+              type: number
+              format: double
+            yaw:
+              type: number
+              format: double
+
+    AttitudeCmd:
+      allOf:
+        - $ref: '#/components/schemas/OffboardCmd'
+        - type: object
+          properties:
+            roll:
+              nullable: true
+              type: number
+              format: double
+            pitch:
+              nullable: true
+              type: number
+              format: double
+            yaw:
+              nullable: true
+              type: number
+              format: double
+            thrust:
+              type: number
+              format: double
+              minimum: 0
+              maximum: 1
+
+    ActuatorCmd:
+      allOf:
+        - $ref: '#/components/schemas/OffboardCmd'
+        - type: object
+          properties:
+            group0:
+              type: array
+              items:
+                type: number
+                format: double
+                minimum: -1
+                maximum: 1
+            group1:
+              type: array
+              items:
+                type: number
+                format: double
+                minimum: -1
+                maximum: 1
+                

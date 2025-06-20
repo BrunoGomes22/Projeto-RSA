@@ -1,0 +1,7 @@
+string action
+SensorParam sp
+MissionParam mp
+DroneParam dp
+---
+bool success
+string message

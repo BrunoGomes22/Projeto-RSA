@@ -1,0 +1,38 @@
+# Base service configuration, including the groundstation software, mongodb, and mqtt server
+version: '3.8'
+services:
+  groundstation:
+    image: fleetman/gs
+    container_name: groundstation
+    network_mode: host
+    depends_on:
+      - db
+      - mqtt
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+      - type: bind
+        source: ${LOG_DIR:-/tmp/fleetman}
+        target: /ws/fleetman_logs
+      - type: bind
+        source: ../configs/plugins/
+        target: /ws/plugins
+      - type: bind
+        source: ../configs/sensors/
+        target: /ws/sensors
+      - type: bind
+        source: ${CFG_FILE}
+        target: /ws/application.properties
+  db:
+    image: mongo:latest
+    container_name: mongodb
+    network_mode: host
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    network_mode: host
+    volumes:
+      - type: bind
+        source: ../configs/mosquitto.conf
+        target: /mosquitto/config/mosquitto.conf

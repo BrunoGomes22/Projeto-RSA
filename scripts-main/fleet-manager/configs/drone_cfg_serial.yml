@@ -1,0 +1,14 @@
+port: serial:///dev/ttyPixhawk
+telemetryTopic: /telem
+commandTopic: /cmd
+statusTopic: /status
+telemetryRateMs: 200
+acceptanceRadius: 0.5
+takeoffAltitude: 3.0
+maxAltitude: 6.0
+returnAltitude: 10.0
+maxSpeed: 2.0
+tags: [hexacopter]
+assignable: true
+reconnectMode: 1
+safeMode: posctl

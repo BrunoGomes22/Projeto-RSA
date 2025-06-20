@@ -1,0 +1,35 @@
+site_name: Fleet Manager
+plugins:
+  - render_swagger
+  - search
+theme:
+  name: material
+  palette:
+    primary: deep orange
+    accent: orange
+  font:
+    text: IBM Plex Sans
+  features:
+    - navigation.tabs
+  logo: assets/rocket.png
+
+nav:
+  - Home:
+      - index.md
+      - started.md
+  - Setup:
+      - installation.md
+      - build.md
+      - launch.md
+      - package.md
+      - configure.md
+  - Software:
+      - software/overview.md
+      - software/drone.md
+      - Groundstation:
+        - software/ground.md
+        - software/api.md
+        - software/plugins.md
+  - Simulation:
+      - simulation.md
+  - Data acquisition

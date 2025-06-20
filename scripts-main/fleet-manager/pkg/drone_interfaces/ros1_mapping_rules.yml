@@ -1,0 +1,5 @@
+-
+  ros1_package_name: 'friends_ros'
+  ros1_message_name: 'MissionStatus'
+  ros2_package_name: 'drone_interfaces'
+  ros2_message_name: 'MissionStatus'

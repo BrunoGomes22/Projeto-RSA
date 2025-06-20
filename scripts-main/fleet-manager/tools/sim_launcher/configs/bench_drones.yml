@@ -1,0 +1,22 @@
+- simulator:
+    showGUI: false
+    coords:
+      lat: 40.633890
+      lon: -8.660407
+      alt: 8.2
+  fleetman:
+    id: drone02
+    telemetryRateMs: 200
+    maxSpeed: 5
+    takeoffAltitude: 3
+- simulator:
+    showGUI: false
+    coords:
+      lat: 40.633961
+      lon: -8.660539
+      alt: 8.2
+  fleetman:
+    id: drone03
+    telemetryRateMs: 200
+    maxSpeed: 5
+    takeoffAltitude: 3

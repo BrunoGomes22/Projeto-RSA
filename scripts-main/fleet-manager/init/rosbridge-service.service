@@ -1,0 +1,12 @@
+[Unit]
+Description=Start rosbridge
+After=roscore.target
+
+[Service]
+Environment=ROS_DOMAIN_ID=128
+Environment=SCRIPT_DIR=/usr/local/bin
+ExecStart=/bin/bash ${SCRIPT_DIR}/start_rosbridge.sh
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

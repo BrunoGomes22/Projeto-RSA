@@ -1,0 +1,10 @@
+droneId: drone01
+sensorTopic: /sensors
+telemTopic: /telem
+rateHigh: 200
+rateMedium: 300
+rateLow: 400
+groundStation_IP: "10.1.1.4"
+groundStation_MAC: "b4:6b:fc:48:80:19"
+interface: "wlan0"
+

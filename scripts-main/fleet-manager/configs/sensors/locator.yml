@@ -1,0 +1,8 @@
+type: locator
+requiresDrone: false
+requiresSensorId: true
+retrieval: map
+parameters:
+  lat: double
+  lon: double
+  alt: float

@@ -1,0 +1,12 @@
+[Unit]
+Description=Start roscore
+After=remote-fs.target
+After=syslog.target
+
+[Service]
+Environment=SCRIPT_DIR=/usr/local/bin
+ExecStart=/bin/bash ${SCRIPT_DIR}/start_roscore.sh
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

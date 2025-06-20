@@ -1,0 +1,1991 @@
+{
+	"info": {
+		"_postman_id": "2b55b4c0-d8cd-4b2c-b0a0-3c75fe81b769",
+		"name": "fleetman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Commands",
+			"item": [
+				{
+					"name": "Arm",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"arm\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Takeoff default alt",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"takeoff\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Takeoff 3meters",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"takeoff\",\n\t\"alt\": 3\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Go to + current yaw & alt",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"goto\",\n    \"lat\": 40.633474,\n    \"lon\": -8.660652\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Go to + 15m AMSL + facing point",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"goto\",\n    \"lat\": 40.634421,\n    \"lon\": -8.660437,\n    \"yaw\": null,\n    \"alt\": 15\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move 10 meters forward",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"custom\",\n\t\"cmd\": \"move\",\n\t\"x\": 0,\n\t\"y\": 10,\n\t\"z\": 0\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move 20 meters right",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"custom\",\n\t\"cmd\": \"move\",\n\t\"x\": 20,\n\t\"y\": 0,\n\t\"z\": 0,\n    \"speed\": 10\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Land",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mode\": \"action\",\n\t\"cmd\": \"land\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Return to launch default alt",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"return\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Return to launch 0meters",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"action\",\n\t\"cmd\": \"return\",\n\t\"alt\": 0\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Circle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"offboard\",\n\t\"cmd\": \"velocity_body\",\n\t\"forward\": 5,\n\t\"right\": 0,\n\t\"down\": 0,\n\t\"yaw\": 30\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Turn 180º",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"custom\",\n\t\"cmd\": \"turn\",\n\t\"deg\": 180\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel current command",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"mode\": \"custom\",\n\t\"cmd\": \"cancel\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/cmd",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"cmd"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Drone data",
+			"item": [
+				{
+					"name": "Get drone data",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone info",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}?data=info",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}"
+							],
+							"query": [
+								{
+									"key": "data",
+									"value": "info"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone telem",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}?data=telem",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}"
+							],
+							"query": [
+								{
+									"key": "data",
+									"value": "telem"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all drones data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all drones info",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "info",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone?data=info",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone"
+							],
+							"query": [
+								{
+									"key": "data",
+									"value": "info"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all drones telem",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "telem",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone?data=telem",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone"
+							],
+							"query": [
+								{
+									"key": "data",
+									"value": "telem"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all ready drones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone?state=ready",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "ready"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all active drones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone?state=active",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "active"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all temperature drones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone?sensors=temperature",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone"
+							],
+							"query": [
+								{
+									"key": "sensors",
+									"value": "temperature"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Drone parameters",
+			"item": [
+				{
+					"name": "Set drone parameters",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"maxSpeed\": 3\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/params",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"params"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone parameters",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/params",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"params"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone maxSpeed",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{gs_url}}/drone/{{drone_id}}/params/maxSpeed",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"{{drone_id}}",
+								"params",
+								"maxSpeed"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sensors",
+			"item": [
+				{
+					"name": "Add sensor config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    postman.setGlobalVariable(\"sensor_type\", jsonData[\"sensorType\"]);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/home/amargs/Dropbox/it/fleet-manager/configs/sensors/temperature.yml"
+							}
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor/config",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor",
+								"config"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace temperature sensor config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/home/amargs/Dropbox/it/fleet-manager/configs/sensors/temperature.yml"
+							}
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor/config/temperature",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor",
+								"config",
+								"temperature"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete temperature sensor config",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor/config/temperature",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor",
+								"config",
+								"temperature"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all sensor configs",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor/config",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor",
+								"config"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get temperature sensor config",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor/config/temperature",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor",
+								"config",
+								"temperature"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all sensor data",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "type",
+									"value": "temperature",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "droneId",
+									"value": "drone01",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "sensorId",
+									"value": "simulated",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all temperature data",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor?type=temperature",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "temperature"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone's sensors",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor?droneId={{drone_id}}",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor"
+							],
+							"query": [
+								{
+									"key": "droneId",
+									"value": "{{drone_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all simulated sensors",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor?sensorId=simulated",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor"
+							],
+							"query": [
+								{
+									"key": "sensorId",
+									"value": "simulated"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone's simulated temperature sensor",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/sensor?sensorId=simulated&type=temperature&droneId={{drone_id}}",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"sensor"
+							],
+							"query": [
+								{
+									"key": "sensorId",
+									"value": "simulated"
+								},
+								{
+									"key": "type",
+									"value": "temperature"
+								},
+								{
+									"key": "droneId",
+									"value": "{{drone_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Mission",
+			"item": [
+				{
+					"name": "Submit mission",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setGlobalVariable(\"mission_id\", jsonData[\"missionId\"]);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": ""
+							}
+						},
+						"url": {
+							"raw": "{{gs_url}}/mission",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pause mission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/mission/{{mission_id}}/pause",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission",
+								"{{mission_id}}",
+								"pause"
+							]
+						},
+						"response": []
+					}
+				},
+				{
+					"name": "Resume mission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/mission/{{mission_id}}/resume",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission",
+								"{{mission_id}}",
+								"resume"
+							]
+						},
+						"response": []
+					}
+				},
+				{
+					"name": "Get last mission",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"cmd\": \"takeoff\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/mission/{{mission_id}}",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission",
+								"{{mission_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all missions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/mission",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get running missions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "running",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/mission",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission"
+							]
+						}
+					},
+					"response": []
+				},			
+				{
+					"name": "Cancel last mission",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{gs_url}}/mission/{{mission_id}}",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"mission",
+								"{{mission_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Plugin",
+			"item": [
+				{
+					"name": "Create plugin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    postman.setGlobalVariable(\"plugin_id\", jsonData[\"pluginId\"]);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/home/amargs/Dropbox/it/fleet-manager/configs/plugins/relay.groovy"
+							}
+						},
+						"url": {
+							"raw": "{{gs_url}}/plugin",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"plugin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace base plugin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setGlobalVariable(\"mission_id\", jsonData[\"missionId\"]);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": ""
+							}
+						},
+						"url": {
+							"raw": "{{gs_url}}/plugin/base_plugin",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"plugin",
+								"base_plugin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get relay plugin",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"cmd\": \"takeoff\"\n}"
+						},
+						"url": {
+							"raw": "{{gs_url}}/plugin/relay",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"plugin",
+								"relay"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all plugins",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/plugin",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"plugin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all monitoring plugins",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "pending",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{gs_url}}/plugin?type=monitoring",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"plugin"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "monitoring"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete base plugin",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{gs_url}}/plugin/base_plugin",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"plugin",
+								"base_plugin"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Drone logs",
+			"item": [
+				{
+					"name": "Get all drone logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone/logs",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"logs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get drone logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "text/plain"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone/logs?droneId={{drone_id}}",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"logs"
+							],
+							"query": [
+								{
+									"key": "droneId",
+									"value": "{{drone_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all drone logs with error",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "text/plain"
+							}
+						],
+						"url": {
+							"raw": "{{gs_url}}/drone/logs?logLevel=error",
+							"host": [
+								"{{gs_url}}"
+							],
+							"path": [
+								"drone",
+								"logs"
+							],
+							"query": [
+								{
+									"key": "logLevel",
+									"value": "error"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

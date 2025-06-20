@@ -1,0 +1,25 @@
+<package format="3">
+  <name>fleetman_drone</name>
+  <version>1.10.0</version>
+  <description>Package for controlling the drone programmatically by using the Mavsdk library. Movement commands are
+    received and processed, while telemetry data is also published.
+  </description>
+  <maintainer email="margaridaocs@ua.pt">Margarida Silva</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclcpp_components</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>MAVSDK</build_depend>
+
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclcpp_components</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>MAVSDK</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

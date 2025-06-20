@@ -1,0 +1,13 @@
+# Development configuration which mounts the source code as volume
+version: '3.8'
+services:
+  groundstation:
+    volumes:
+      - type: bind
+        source: ../cmd/server/
+        target: /ws/src/server
+      - type: bind
+        source: ../pkg/drone_interfaces/
+        target: /ws/src/drone_interfaces
+    command: bash
+    tty: true

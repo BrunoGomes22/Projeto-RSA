@@ -1,0 +1,6 @@
+type: temperature
+requiresDrone: true
+requiresSensorId: true
+retrieval: latest
+parameters: double
+timeout: 10000

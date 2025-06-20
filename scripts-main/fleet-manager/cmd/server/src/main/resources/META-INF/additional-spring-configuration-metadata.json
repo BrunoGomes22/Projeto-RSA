@@ -1,0 +1,29 @@
+{
+  "properties": [
+    {
+      "name": "fleetman.ros2.node",
+      "type": "java.lang.String",
+      "description": "ROS2 node name."
+    },
+    {
+      "name": "fleetman.ros2.topic.cmd",
+      "type": "java.lang.String",
+      "description": "ROS2 topic where drone commands are received."
+    },
+    {
+      "name": "fleetman.ros2.topic.telem",
+      "type": "java.lang.String",
+      "description": "ROS2 topic where drone telemetry is received."
+    },
+    {
+      "name": "fleetman.drone.batteryLevel.critical",
+      "type": "java.lang.Double",
+      "description": "Critical battery level threshold."
+    },
+    {
+      "name": "fleetman.drone.batteryLevel.low",
+      "type": "java.lang.Double",
+      "description": "Low battery level threshold."
+    }
+  ]
+}

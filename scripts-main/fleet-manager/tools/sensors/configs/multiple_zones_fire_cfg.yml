@@ -1,0 +1,27 @@
+droneId: drone01
+plotDimension: 1000
+sensorTopic: /sensors
+telemTopic: /telem
+rate: 200
+environmentTemp: 20
+heatSources:
+  - coords:
+      lat: 40.633390
+      lon: -8.660815
+    radius: 40
+    temp: 60
+  - coords:
+      lat: 40.633147
+      lon: -8.660358
+    radius: 60
+    temp: 65
+  - coords:
+      lat: 40.633507
+      lon: -8.659878
+    radius: 50
+    temp: 65
+  - coords:
+      lat: 40.633827
+      lon: -8.659978
+    radius: 30
+    temp: 60
